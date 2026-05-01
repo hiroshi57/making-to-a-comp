@@ -1,0 +1,205 @@
+{
+  "company": {
+    "name": "TBD Inc.",
+    "name_ja": "（社名未定）株式会社",
+    "founded": "2024-01-01",
+    "location": "東京都渋谷区",
+    "industry": "AIマーケティング・テクノロジー",
+    "description": "マーケティング課題をAIエージェントのパイプラインで解決するスタートアップ"
+  },
+  "employees": [
+    {
+      "id": "EMP001",
+      "role": "CEO",
+      "role_ja": "最高経営責任者",
+      "name": "田中 誠",
+      "name_en": "Makoto Tanaka",
+      "email": "ceo@company.jp",
+      "department": "経営",
+      "responsibilities": [
+        "全社統括",
+        "事業戦略",
+        "投資家対応"
+      ],
+      "credentials": {
+        "slack_id": "U001CEO",
+        "system_role": "admin"
+      },
+      "bank": {
+        "bank_name": "三菱UFJ銀行",
+        "branch": "渋谷支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0001"
+      }
+    },
+    {
+      "id": "EMP002",
+      "role": "CMO",
+      "role_ja": "マーケティング責任者",
+      "name": "山田 花子",
+      "name_en": "Hanako Yamada",
+      "email": "marketing@company.jp",
+      "department": "マーケティング",
+      "responsibilities": [
+        "市場分析",
+        "広告戦略",
+        "ブランド管理",
+        "KPI管理"
+      ],
+      "credentials": {
+        "slack_id": "U002CMO",
+        "system_role": "marketing_manager"
+      },
+      "bank": {
+        "bank_name": "みずほ銀行",
+        "branch": "恵比寿支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0002"
+      }
+    },
+    {
+      "id": "EMP003",
+      "role": "営業部長",
+      "role_ja": "営業部長",
+      "name": "鈴木 一郎",
+      "name_en": "Ichiro Suzuki",
+      "email": "sales@company.jp",
+      "department": "営業",
+      "responsibilities": [
+        "受注管理",
+        "顧客開拓",
+        "売上達成"
+      ],
+      "credentials": {
+        "slack_id": "U003SALES",
+        "system_role": "sales_manager"
+      },
+      "bank": {
+        "bank_name": "三井住友銀行",
+        "branch": "新宿支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0003"
+      }
+    },
+    {
+      "id": "EMP004",
+      "role": "CS責任者",
+      "role_ja": "カスタマーサポート責任者",
+      "name": "佐藤 美咲",
+      "name_en": "Misaki Sato",
+      "email": "support@company.jp",
+      "department": "カスタマーサポート",
+      "responsibilities": [
+        "顧客対応",
+        "クレーム処理",
+        "NPS改善"
+      ],
+      "credentials": {
+        "slack_id": "U004CS",
+        "system_role": "cs_manager"
+      },
+      "bank": {
+        "bank_name": "りそな銀行",
+        "branch": "品川支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0004"
+      }
+    },
+    {
+      "id": "EMP005",
+      "role": "CTO",
+      "role_ja": "最高技術責任者",
+      "name": "高橋 健",
+      "name_en": "Ken Takahashi",
+      "email": "dev@company.jp",
+      "department": "エンジニアリング",
+      "responsibilities": [
+        "システム設計",
+        "AIパイプライン開発",
+        "インフラ管理"
+      ],
+      "credentials": {
+        "slack_id": "U005CTO",
+        "system_role": "admin"
+      },
+      "bank": {
+        "bank_name": "三菱UFJ銀行",
+        "branch": "渋谷支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0005"
+      }
+    },
+    {
+      "id": "EMP006",
+      "role": "法務責任者",
+      "role_ja": "法務責任者",
+      "name": "伊藤 法人",
+      "name_en": "Hojin Ito",
+      "email": "legal@company.jp",
+      "department": "法務",
+      "responsibilities": [
+        "契約審査",
+        "リスク管理",
+        "コンプライアンス"
+      ],
+      "credentials": {
+        "slack_id": "U006LEGAL",
+        "system_role": "legal_manager"
+      },
+      "bank": {
+        "bank_name": "みずほ銀行",
+        "branch": "丸の内支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0006"
+      }
+    },
+    {
+      "id": "EMP007",
+      "role": "CFO",
+      "role_ja": "最高財務責任者",
+      "name": "中村 会計",
+      "name_en": "Kaikei Nakamura",
+      "email": "accounting@company.jp",
+      "department": "経理・財務",
+      "responsibilities": [
+        "財務管理",
+        "予算策定",
+        "税務・会計"
+      ],
+      "credentials": {
+        "slack_id": "U007CFO",
+        "system_role": "finance_manager"
+      },
+      "bank": {
+        "bank_name": "三井住友銀行",
+        "branch": "大手町支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0007"
+      }
+    },
+    {
+      "id": "EMP008",
+      "role": "採用責任者",
+      "role_ja": "人事・採用責任者",
+      "name": "小林 人事",
+      "name_en": "Jinji Kobayashi",
+      "email": "hr@company.jp",
+      "department": "人事・採用",
+      "responsibilities": [
+        "採用計画",
+        "面接・選考",
+        "オンボーディング"
+      ],
+      "credentials": {
+        "slack_id": "U008HR",
+        "system_role": "hr_manager"
+      },
+      "bank": {
+        "bank_name": "りそな銀行",
+        "branch": "渋谷支店",
+        "account_type": "普通",
+        "account_number": "XXXX-0008"
+      }
+    }
+  ]
+}

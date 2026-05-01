@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">TBD Inc. — Operations Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:       #f5f5f7;
+    --surface:  #ffffff;
+    --border:   #e5e5ea;
+    --sidebar:  #ffffff;
+    --accent:   #5856d6;
+    --accent2:  #ff2d55;
+    --accent3:  #30d158;
+    --text:     #1c1c1e;
+    --muted:    #8e8e93;
+    --up:       #30d158;
+    --down:     #ff3b30;
+    --warn:     #ff9500;
+    --hover:    #f2f2f7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 60px 1fr;
+  }
+
+  /* ── Sidebar ─────────────────────────────────── */
+  .sidebar {
+    grid-row: 1 / -1;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .nav-section {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 18px 20px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 20px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .nav-item:hover {
+    color: var(--text);
+    background: var(--hover);
+  }
+
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(88,86,214,0.06);
+    font-weight: 500;
+  }
+
+  .nav-icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--up);
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ── Header ──────────────────────────────────── */
+  .header {
+    grid-column: 2;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── Main ────────────────────────────────────── */
+  .main {
+    grid-column: 2;
+    padding: 24px 28px 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* ── Section ─────────────────────────────────── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── KPI Cards ───────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 20px 18px;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .kpi-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+  }
+
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--kpi-color, var(--accent));
+    border-radius: 14px 14px 0 0;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .kpi-delta {
+    margin-top: 8px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .delta-up   { color: var(--up); }
+  .delta-down { color: var(--down); }
+  .delta-label { color: var(--muted); margin-left: 4px; }
+
+  /* ── Cards ───────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .card-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── Charts ──────────────────────────────────── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+  }
+
+  .chart-body { padding: 16px 20px; }
+  .chart-wrap { position: relative; height: 200px; }
+
+  /* ── Badge ───────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .badge-blue   { background: rgba(88,86,214,.1);  color: var(--accent); }
+  .badge-green  { background: rgba(48,209,88,.1);  color: var(--up); }
+  .badge-red    { background: rgba(255,59,48,.1);  color: var(--down); }
+  .badge-orange { background: rgba(255,149,0,.1);  color: var(--warn); }
+  .badge-gray   { background: rgba(142,142,147,.1);color: var(--muted); }
+
+  /* ── Table ───────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 20px;
+    text-align: left;
+    background: var(--hover);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 13px 20px;
+    font-size: 12px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tbody tr {
+    transition: background 0.12s;
+    cursor: default;
+  }
+
+  tbody tr:hover td { background: var(--hover); }
+
+  /* ── Employee Directory ──────────────────────── */
+  .emp-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .emp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.18s;
+  }
+
+  .emp-card:hover {
+    box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .emp-card-top {
+    padding: 20px 20px 16px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .emp-avatar {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 28px;
+    line-height: 1;
+    position: relative;
+  }
+
+  .emp-avatar-emoji { font-size: 28px; }
+
+  .emp-meta { flex: 1; min-width: 0; }
+
+  .emp-role-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 20px;
+    display: inline-block; margin-bottom: 5px;
+  }
+
+  .emp-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 800;
+    letter-spacing: 0.01em;
+    margin-bottom: 2px;
+  }
+
+  .emp-name-en { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+  .emp-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .emp-tag {
+    font-size: 10px; padding: 2px 7px;
+    background: var(--hover);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+  }
+
+  .emp-card-body { padding: 14px 20px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .emp-section-title {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+
+  /* skill bars */
+  .skill-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .skill-label { font-size: 10px; color: var(--muted); width: 80px; flex-shrink: 0; }
+  .skill-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .skill-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+  .skill-val { font-size: 10px; color: var(--muted); width: 28px; text-align: right; }
+
+  /* contribution sparkline */
+  .sparkline-wrap { height: 40px; }
+
+  /* merit/demerit */
+  .md-list { display: flex; flex-direction: column; gap: 4px; }
+  .md-item { display: flex; gap: 6px; font-size: 11px; align-items: flex-start; }
+  .md-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+
+  /* dream */
+  .dream-box {
+    background: var(--hover);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 12px;
+    font-size: 12px; line-height: 1.6;
+    color: var(--text);
+  }
+
+  .quote-box {
+    font-size: 12px; font-style: italic;
+    color: var(--muted);
+    text-align: center;
+    padding: 8px 0 0;
+    border-top: 1px dashed var(--border);
+  }
+
+  /* ── Agent Log ───────────────────────────────── */
+  .log-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 90px 80px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    cursor: default;
+  }
+
+  .log-row:last-child { border-bottom: none; }
+  .log-row:hover { background: var(--hover); }
+
+  .log-ts { font-size: 11px; color: var(--muted); font-family: monospace; }
+
+  .log-task { font-size: 12px; font-weight: 500; margin-bottom: 5px; }
+
+  .log-agents { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .agent-tag {
+    font-size: 9px; padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(88,86,214,.08);
+    color: var(--accent);
+    font-weight: 700; letter-spacing: 0.05em;
+  }
+
+  .score-wrap { text-align: right; }
+
+  .score-bar {
+    height: 4px; border-radius: 2px;
+    background: var(--border); overflow: hidden;
+    margin-bottom: 4px;
+  }
+
+  .score-fill { height: 100%; border-radius: 2px; }
+  .score-text { font-size: 11px; color: var(--muted); }
+
+
+  /* ── Buttons ─────────────────────────────────── */
+  .btn-primary {
+    padding: 7px 14px;
+    background: var(--accent);
+    color: white;
+    border: none; border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 12px;
+    cursor: pointer; transition: opacity .15s;
+    white-space: nowrap;
+  }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .4; cursor: default; }
+
+  .btn-secondary {
+    padding: 7px 12px;
+    background: var(--hover);
+    color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 12px;
+    cursor: pointer; transition: background .15s;
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  .btn-ghost {
+    padding: 9px 18px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 13px;
+    cursor: pointer; transition: background .15s;
+  }
+  .btn-ghost:hover { background: var(--hover); }
+
+  /* ── Modal / Overlay ─────────────────────────── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.3);
+    z-index: 200;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .overlay.open { display: flex; }
+
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    max-width: 92vw; max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,.16);
+  }
+
+  .modal-hd {
+    padding: 18px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px;
+  }
+
+  .modal-x {
+    background: none; border: none; font-size: 16px;
+    color: var(--muted); cursor: pointer;
+    padding: 2px 6px; border-radius: 6px;
+  }
+  .modal-x:hover { background: var(--hover); }
+
+  .modal-bd { padding: 20px 22px; }
+
+  .modal-ft {
+    padding: 14px 22px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+
+  /* ── Form ────────────────────────────────────── */
+  .form-row { margin-bottom: 14px; }
+  .form-row label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--muted); margin-bottom: 5px;
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+  .req { color: var(--down); }
+
+  .f-input {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--border); border-radius: 9px;
+    font-size: 13px; font-family: inherit;
+    background: var(--hover); color: var(--text);
+    outline: none; transition: border-color .15s;
+    -webkit-appearance: none;
+  }
+  .f-input:focus { border-color: var(--accent); }
+
+  .form-msg {
+    padding: 0 22px 14px; font-size: 12px;
+    min-height: 20px;
+  }
+
+  /* ── CSV Drop zone ───────────────────────────── */
+  .csv-drop {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .csv-drop:hover, .csv-drop.drag { border-color: var(--accent); background: rgba(88,86,214,.04); }
+
+  /* ── Scrollbar ───────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ──────────────────────────────────── -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-name" id="companyName">TBD Inc.</div>
+    <div class="logo-sub">Operations Dashboard</div>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" data-target="kpi">
+    <span class="nav-icon">◈</span> KPI サマリー
+  </div>
+  <div class="nav-item" data-target="trend">
+    <span class="nav-icon">↗</span> 売上トレンド
+  </div>
+  <div class="nav-item" data-target="orders">
+    <span class="nav-icon">◻</span> 受注一覧
+  </div>
+
+  <div class="nav-section">Organization</div>
+  <div class="nav-item" data-target="team">
+    <span class="nav-icon">◉</span> チームメンバー
+  </div>
+
+  <div class="nav-section">Finance</div>
+  <div class="nav-item" data-target="snga">
+    <span class="nav-icon">◑</span> 販管費
+  </div>
+
+  <div class="nav-section">AI Engine</div>
+  <div class="nav-item" data-target="agents">
+    <span class="nav-icon">⬡</span> エージェントログ
+  </div>
+  <div class="nav-item" data-target="forecast">
+    <span class="nav-icon">◬</span> 売上予測
+  </div>
+
+  <div class="nav-section">System</div>
+  <div class="nav-item" onclick="openSettings()">
+    <span class="nav-icon">⚙</span> 設定
+  </div>
+
+  <div class="sidebar-footer">
+    <div id="sidebarUser" style="margin-bottom:8px"></div>
+    <span class="status-dot"></span>システム稼働中<br>
+    <span id="sidebarDate" style="display:block;margin-top:4px;font-size:10px;"></span>
+    <button onclick="logout()" style="margin-top:10px;width:100%;padding:6px;background:none;
+      border:1px solid var(--border);border-radius:7px;font-size:11px;color:var(--muted);
+      cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--hover)'"
+      onmouseout="this.style.background='none'">ログアウト</button>
+  </div>
+</nav>
+
+<!-- ── Header ───────────────────────────────────── -->
+<header class="header">
+  <div class="header-title" id="headerTitle">KPI サマリー</div>
+  <div class="header-right">
+    <span id="headerDate"></span>
+    <span>Tokyo, Japan</span>
+    <span class="badge badge-green">Live</span>
+  </div>
+</header>
+
+<!-- ── Main ─────────────────────────────────────── -->
+<main class="main">
+
+  <!-- KPI -->
+  <section id="kpi">
+    <div class="section-label">KPI サマリー</div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </section>
+
+  <!-- Trend -->
+  <section id="trend">
+    <div class="section-label">売上・コストトレンド</div>
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">月次売上 / コスト</div>
+            <div class="card-sub">直近12ヶ月 + TimesFM予測（6ヶ月）</div>
+          </div>
+          <span class="badge badge-blue">TimesFM 2.5</span>
+        </div>
+        <div class="chart-body"><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">受注件数</div>
+            <div class="card-sub">月次推移</div>
+          </div>
+        </div>
+        <div class="chart-body"><div class="chart-wrap"><canvas id="ordersChart"></canvas></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Orders -->
+  <section id="orders">
+    <div class="section-label">受注一覧</div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">受注リスト</div>
+          <div class="card-sub" id="orderSub">全件</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge badge-green" id="orderCount"></span>
+          <button class="btn-primary" onclick="openOrderForm()">＋ 新規受注</button>
+          <button class="btn-secondary" onclick="openCsvImport()">↑ CSV</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>注文ID</th><th>取引先</th><th>金額</th><th>日付</th><th>担当</th><th>ステータス</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Team -->
+  <section id="team">
+    <div class="section-label">チームメンバー</div>
+    <div id="empGrid"></div>
+  </section>
+
+  <!-- SG&A 販管費 -->
+  <section id="snga">
+    <div class="section-label">販売費及び一般管理費（販管費）</div>
+
+    <!-- KPI row -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px" id="sngaKpi"></div>
+
+    <!-- Charts row -->
+    <div class="charts-row">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">月次販管費推移</div>
+            <div class="card-sub">費目別スタック（万円）</div>
+          </div>
+        </div>
+        <div class="chart-body"><div class="chart-wrap"><canvas id="sngaTrendChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">費目別内訳</div>
+            <div class="card-sub">当月（円グラフ）</div>
+          </div>
+        </div>
+        <div class="chart-body"><div class="chart-wrap"><canvas id="sngaDonut"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Breakdown table -->
+    <div class="card" style="margin-top:14px">
+      <div class="card-header">
+        <div class="card-title">費目別明細</div>
+        <span class="badge badge-blue">当月</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>費目</th><th>金額</th><th>構成比</th><th>前月比</th><th>比率バー</th></tr>
+        </thead>
+        <tbody id="sngaTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Agent Log -->
+  <section id="agents">
+    <div class="section-label">AIエージェントログ</div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">パイプライン実行履歴</div>
+          <div class="card-sub">Claude API — 5エージェントパイプライン</div>
+        </div>
+        <span class="badge badge-blue">Claude API</span>
+      </div>
+      <div id="agentLog"></div>
+    </div>
+  </section>
+
+  <!-- Forecast -->
+  <section id="forecast">
+    <div class="section-label">売上予測（TimesFM 2.5）</div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">6ヶ月先行予測</div>
+          <div class="card-sub">10th – 90th パーセンタイル（信頼区間）</div>
+        </div>
+        <span class="badge badge-blue">TimesFM 2.5</span>
+      </div>
+      <div class="chart-body"><div class="chart-wrap" style="height:220px"><canvas id="forecastChart"></canvas></div></div>
+      <table style="margin-top:0">
+        <thead>
+          <tr><th>月</th><th>予測売上</th><th>下限（10th）</th><th>上限（90th）</th></tr>
+        </thead>
+        <tbody id="forecastTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── 受注フォーム Modal ──── -->
+<div class="overlay" id="orderModal">
+  <div class="modal-box" style="width:480px">
+    <div class="modal-hd"><span>新規受注登録</span><button class="modal-x" onclick="closeModal('orderModal')">✕</button></div>
+    <div class="modal-bd">
+      <div class="form-row"><label>取引先名 <span class="req">*</span></label>
+        <input id="f-client" type="text" class="f-input" placeholder="株式会社○○"></div>
+      <div class="form-row"><label>金額（円） <span class="req">*</span></label>
+        <input id="f-amount" type="number" class="f-input" placeholder="1000000" min="0"></div>
+      <div class="form-row"><label>受注日</label>
+        <input id="f-date" type="date" class="f-input"></div>
+      <div class="form-row"><label>担当者</label>
+        <select id="f-agent" class="f-input">
+          <option>CMO</option><option>Sales</option><option>CEO</option><option>CS</option>
+        </select></div>
+      <div class="form-row"><label>ステータス</label>
+        <select id="f-status" class="f-input">
+          <option>受注</option><option>請求済</option><option>入金済</option>
+        </select></div>
+      <div class="form-row"><label>備考</label>
+        <input id="f-note" type="text" class="f-input" placeholder="任意"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-ghost" onclick="closeModal('orderModal')">キャンセル</button>
+      <button class="btn-primary" onclick="submitOrder()">登録する</button>
+    </div>
+    <div id="orderMsg" class="form-msg"></div>
+  </div>
+</div>
+
+<!-- ── CSVインポート Modal ── -->
+<div class="overlay" id="csvModal">
+  <div class="modal-box" style="width:480px">
+    <div class="modal-hd"><span>受注データ CSVインポート</span><button class="modal-x" onclick="closeModal('csvModal')">✕</button></div>
+    <div class="modal-bd">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        以下の列を含む UTF-8 または Shift-JIS の CSV を選択してください。
+      </p>
+      <div style="background:var(--hover);border-radius:8px;padding:10px 14px;font-size:11px;
+                  font-family:monospace;color:var(--muted);margin-bottom:16px">
+        client, amount, date, status, agent, note
+      </div>
+      <div class="csv-drop" id="csvDrop" onclick="document.getElementById('csvFile').click()">
+        <div style="font-size:24px;margin-bottom:8px">📂</div>
+        <div style="font-size:13px;font-weight:500">クリックまたはドラッグ＆ドロップ</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="csvFileName">CSVファイルを選択</div>
+        <input id="csvFile" type="file" accept=".csv" style="display:none" onchange="onCsvSelect(event)">
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-ghost" onclick="closeModal('csvModal')">キャンセル</button>
+      <button class="btn-primary" id="csvImportBtn" onclick="submitCsv()" disabled>インポート</button>
+    </div>
+    <div id="csvMsg" class="form-msg"></div>
+  </div>
+</div>
+
+<!-- ── 設定 Modal ──────────── -->
+<div class="overlay" id="settingsModal">
+  <div class="modal-box" style="width:520px">
+    <div class="modal-hd"><span>⚙ 設定</span><button class="modal-x" onclick="closeModal('settingsModal')">✕</button></div>
+    <div class="modal-bd">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+                  color:var(--muted);margin-bottom:10px">会社情報</div>
+      <div class="form-row"><label>会社名（英語）</label>
+        <input id="s-name" type="text" class="f-input" placeholder="TBD Inc."></div>
+      <div class="form-row"><label>会社名（日本語）</label>
+        <input id="s-name-ja" type="text" class="f-input" placeholder="株式会社○○"></div>
+      <div class="form-row"><label>所在地</label>
+        <input id="s-location" type="text" class="f-input" placeholder="東京都渋谷区"></div>
+
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+                  color:var(--muted);margin:16px 0 10px">Claude API</div>
+      <div id="pipelineStatus" style="font-size:12px;padding:10px 14px;border-radius:8px;
+                                       background:var(--hover);margin-bottom:10px">確認中...</div>
+      <div class="form-row">
+        <label>モデル</label>
+        <input id="s-model" type="text" class="f-input" value="claude-sonnet-4-6" readonly
+               style="color:var(--muted)">
+      </div>
+      <p style="font-size:11px;color:var(--muted)">
+        APIキーは <code>.env</code> ファイルの <code>ANTHROPIC_API_KEY</code> に設定してください。
+        変更後はサーバーを再起動してください。
+      </p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-ghost" onclick="closeModal('settingsModal')">キャンセル</button>
+      <button class="btn-primary" onclick="submitSettings()">保存する</button>
+    </div>
+    <div id="settingsMsg" class="form-msg"></div>
+  </div>
+</div>
+
+<script src="app.js" defer></script>
+</body>
+</html>
